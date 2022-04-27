@@ -16,8 +16,6 @@ const leads: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
     const lead = await LeadManager.getLeadById(leadId);
     const team = await TeamManager.markLeadAsVisited(teamId, lead);
 
-    console.log(JSON.stringify(team, null, 2));
-
     return formatJSONResponse({ lead, team });
   } catch (error) {
     if (error.message === "ITEM_NOT_FOUND") {

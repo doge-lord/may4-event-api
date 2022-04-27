@@ -12,6 +12,7 @@ export default {
           resultTtlInSeconds: 300,
           type: "request",
         },
+        cors: true,
       },
     },
   ],
