@@ -1,6 +1,9 @@
 import type { AWS } from "@serverless/typescript";
 
-import leads from "@functions/leads";
+import authorize from "@functions/authorize";
+import login from "@functions/login";
+import logout from "@functions/logout";
+import visitLeads from "@functions/visit-leads";
 
 const serverlessConfiguration: AWS = {
   service: "may4-event-api",
@@ -10,6 +13,7 @@ const serverlessConfiguration: AWS = {
     "serverless-offline",
     "serverless-dynamodb-local",
   ],
+  useDotenv: true,
   provider: {
     name: "aws",
     runtime: "nodejs14.x",
@@ -24,6 +28,11 @@ const serverlessConfiguration: AWS = {
     iamRoleStatements: [
       {
         Effect: "Allow",
+        Action: ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem"],
+        Resource: [{ "Fn::GetAtt": ["LeadsTable", "Arn"] }],
+      },
+      {
+        Effect: "Allow",
         Action: [
           "dynamodb:Query",
           "dynamodb:Scan",
@@ -32,11 +41,16 @@ const serverlessConfiguration: AWS = {
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
         ],
-        Resource: [{ "Fn::GetAtt": ["LeadsTable", "Arn"] }],
+        Resource: [{ "Fn::GetAtt": ["TeamsTable", "Arn"] }],
       },
     ],
   },
-  functions: { leads },
+  functions: {
+    authorize,
+    login,
+    logout,
+    visitLeads,
+  },
   resources: {
     Resources: {
       LeadsTable: {
@@ -67,6 +81,34 @@ const serverlessConfiguration: AWS = {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1,
           },
+        },
+      },
+      TeamsTable: {
+        Type: "AWS::DynamoDB::Table",
+        Properties: {
+          TableName: "teams",
+          AttributeDefinitions: [
+            {
+              AttributeName: "id",
+              AttributeType: "S",
+            },
+          ],
+          KeySchema: [
+            {
+              AttributeName: "id",
+              KeyType: "HASH",
+            },
+          ],
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1,
+          },
+        },
+      },
+      SeedDataBucket: {
+        Type: "AWS::S3::Bucket",
+        Properties: {
+          BucketName: "seed-data",
         },
       },
     },

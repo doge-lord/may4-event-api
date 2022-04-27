@@ -1,4 +1,4 @@
-import dbClient from "../db-client";
+import { dbClient } from "@libs/db-client";
 
 import { Lead } from "@libs/models/lead";
 
@@ -26,7 +26,7 @@ export class LeadManager {
       throw new Error("ITEM_NOT_FOUND");
     }
 
-    return LeadManager._parseToModel(result);
+    return this._parseToModel(result);
   }
 
   private static _parseToModel(item: any): Lead {

@@ -6,7 +6,7 @@ For detailed instructions, please refer to the [documentation](https://www.serve
 
 ## Installation/deployment instructions
 
-# Noel's notes
+### Noel's notes
 
 - Install nvm
 - `nvm install --lts=fermium`
@@ -21,7 +21,11 @@ To access local dynamodb via web interface
 
 - `npm install -g dynamodb-admin` (web interface for local dynamodb)
 - run `dynamodb-admin` on a separate tab
-- create new item on the table
+- create new item on the table (see `data/*.json `)
+
+(note end)
+
+---
 
 Depending on your preferred package manager, follow the instructions below to deploy your project.
 
