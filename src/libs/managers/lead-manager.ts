@@ -3,6 +3,8 @@ import { dbClient } from "@libs/db-client";
 import { Lead } from "@libs/models/lead";
 
 export class LeadManager {
+  static tableName = process.env.LEADS_TABLE;
+
   static async getLeadById(id: string) {
     const params = {
       ExpressionAttributeNames: {
@@ -15,7 +17,7 @@ export class LeadManager {
       },
       KeyConditionExpression:
         "#hash_key = :hash_key AND begins_with(#sort_key, :sort_key)",
-      TableName: "leads",
+      TableName: this.tableName,
     };
 
     const { Items } = await dbClient.query(params).promise();

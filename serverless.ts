@@ -1,5 +1,6 @@
 import type { AWS } from "@serverless/typescript";
 
+import seedData from "@functions/seed-data";
 import authorize from "@functions/authorize";
 import login from "@functions/login";
 import logout from "@functions/logout";
@@ -14,6 +15,7 @@ const serverlessConfiguration: AWS = {
     "serverless-esbuild",
     "serverless-offline",
     "serverless-dynamodb-local",
+    "serverless-s3-local",
   ],
   useDotenv: true,
   provider: {
@@ -26,28 +28,42 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       NODE_OPTIONS: "--enable-source-maps --stack-trace-limit=1000",
+      S3_SEED_DATA_BUCKET:
+        "${self:service}-${sls:stage, self:provider.stage}-seed-data",
+      LEADS_TABLE: "leads-table-${sls:stage, self:provider.stage}",
+      TEAMS_TABLE: "teams-table-${sls:stage, self:provider.stage}",
     },
-    iamRoleStatements: [
-      {
-        Effect: "Allow",
-        Action: ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem"],
-        Resource: [{ "Fn::GetAtt": ["LeadsTable", "Arn"] }],
-      },
-      {
-        Effect: "Allow",
-        Action: [
-          "dynamodb:Query",
-          "dynamodb:Scan",
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
+    iam: {
+      role: {
+        statements: [
+          {
+            Effect: "Allow",
+            Action: ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem"],
+            Resource: [{ "Fn::GetAtt": ["LeadsTable", "Arn"] }],
+          },
+          {
+            Effect: "Allow",
+            Action: [
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+            ],
+            Resource: [{ "Fn::GetAtt": ["TeamsTable", "Arn"] }],
+          },
+          {
+            Effect: "Allow",
+            Action: ["s3:GetObject"],
+            Resource: [{ "Fn::GetAtt": ["SeedDataBucket", "Arn"] }],
+          },
         ],
-        Resource: [{ "Fn::GetAtt": ["TeamsTable", "Arn"] }],
       },
-    ],
+    },
   },
   functions: {
+    seedData,
     authorize,
     login,
     logout,
@@ -71,7 +87,7 @@ const serverlessConfiguration: AWS = {
       LeadsTable: {
         Type: "AWS::DynamoDB::Table",
         Properties: {
-          TableName: "leads",
+          TableName: "${self:provider.environment.LEADS_TABLE}",
           AttributeDefinitions: [
             {
               AttributeName: "id",
@@ -101,7 +117,7 @@ const serverlessConfiguration: AWS = {
       TeamsTable: {
         Type: "AWS::DynamoDB::Table",
         Properties: {
-          TableName: "teams",
+          TableName: "${self:provider.environment.TEAMS_TABLE}",
           AttributeDefinitions: [
             {
               AttributeName: "id",
@@ -123,7 +139,7 @@ const serverlessConfiguration: AWS = {
       SeedDataBucket: {
         Type: "AWS::S3::Bucket",
         Properties: {
-          BucketName: "seed-data",
+          BucketName: "${self:provider.environment.S3_SEED_DATA_BUCKET}",
         },
       },
     },
@@ -147,11 +163,11 @@ const serverlessConfiguration: AWS = {
         domain: {
           sources: [
             {
-              table: "leads",
+              table: "${self:provider.environment.LEADS_TABLE}",
               sources: ["./mock-data/leads.json"],
             },
             {
-              table: "teams",
+              table: "${self:provider.environment.TEAMS_TABLE}",
               sources: ["./mock-data/teams.json"],
             },
           ],

@@ -5,10 +5,12 @@ import { Team } from "@libs/models/team";
 import { Lead } from "@libs/models/lead";
 
 export class TeamManager {
+  static tableName = process.env.TEAMS_TABLE;
+
   static async login(id: string, password: string) {
     const { Item: result } = await dbClient
       .get({
-        TableName: "teams",
+        TableName: this.tableName,
         Key: { id },
       })
       .promise();
@@ -29,7 +31,7 @@ export class TeamManager {
   static async getTeamById(id: string) {
     const { Item: result } = await dbClient
       .get({
-        TableName: "teams",
+        TableName: this.tableName,
         Key: { id },
       })
       .promise();
@@ -42,7 +44,9 @@ export class TeamManager {
   }
 
   static async getTeamScores() {
-    const { Items } = await dbClient.scan({ TableName: "teams" }).promise();
+    const { Items } = await dbClient
+      .scan({ TableName: this.tableName })
+      .promise();
 
     return Items.map((item) => this._parseToModel(item))
       .sort((a, b) => {
@@ -96,7 +100,7 @@ export class TeamManager {
         "SET #leadsVisited = list_append(#leadsVisited, :leadsVisited)",
       ConditionExpression: "attribute_not_exists(#investigationEndDate)",
       Key: { id },
-      TableName: "teams",
+      TableName: this.tableName,
       ReturnValues: "ALL_NEW",
     };
 
@@ -129,7 +133,7 @@ export class TeamManager {
       UpdateExpression: "SET #investigationEndDate = :investigationEndDate",
       ConditionExpression: "attribute_not_exists(#investigationEndDate)",
       Key: { id },
-      TableName: "teams",
+      TableName: this.tableName,
       ReturnValues: "ALL_NEW",
     };
 
