@@ -5,6 +5,7 @@ import login from "@functions/login";
 import logout from "@functions/logout";
 import visitLead from "@functions/visit-lead";
 import endInvestigation from "@functions/end-investigation";
+import teamsLeadCount from "@functions/teams-lead-count";
 
 const serverlessConfiguration: AWS = {
   service: "may4-event-api",
@@ -52,6 +53,7 @@ const serverlessConfiguration: AWS = {
     logout,
     visitLead,
     endInvestigation,
+    teamsLeadCount,
   },
   resources: {
     Resources: {

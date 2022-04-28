@@ -41,6 +41,42 @@ export class TeamManager {
     return this._parseToModel(result);
   }
 
+  static async getTeamScores() {
+    const { Items } = await dbClient.scan({ TableName: "teams" }).promise();
+
+    return Items.map((item) => this._parseToModel(item))
+      .sort((a, b) => {
+        if (
+          (a.investigationEndDate && b.investigationEndDate) ||
+          (!a.investigationEndDate && !b.investigationEndDate)
+        ) {
+          const diffCount = a.distinctLeadsCount - b.distinctLeadsCount;
+
+          if (diffCount === 0) {
+            const diffDate = a.distinctLeadsCount - b.distinctLeadsCount;
+            if (diffDate != 0) {
+              return diffDate;
+            }
+
+            if (a.id > b.id) {
+              return 1;
+            } else if (a.id < b.id) {
+              return -1;
+            } else {
+              return 0;
+            }
+          }
+
+          return diffCount;
+        } else if (a.investigationEndDate) {
+          return -1;
+        } else {
+          return 1;
+        }
+      })
+      .map(({ leadsVisited, ...team }) => team);
+  }
+
   static async markLeadAsVisited(id: string, lead: Lead) {
     const params = {
       ExpressionAttributeNames: {
