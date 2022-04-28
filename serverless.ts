@@ -3,7 +3,8 @@ import type { AWS } from "@serverless/typescript";
 import authorize from "@functions/authorize";
 import login from "@functions/login";
 import logout from "@functions/logout";
-import visitLeads from "@functions/visit-leads";
+import visitLead from "@functions/visit-lead";
+import endInvestigation from "@functions/end-investigation";
 
 const serverlessConfiguration: AWS = {
   service: "may4-event-api",
@@ -49,7 +50,8 @@ const serverlessConfiguration: AWS = {
     authorize,
     login,
     logout,
-    visitLeads,
+    visitLead,
+    endInvestigation,
   },
   resources: {
     Resources: {
@@ -138,7 +140,21 @@ const serverlessConfiguration: AWS = {
     },
     dynamodb: {
       stages: ["dev"],
-      start: { migrate: true, inMemory: true },
+      start: { migrate: true, inMemory: true, seed: true },
+      seed: {
+        domain: {
+          sources: [
+            {
+              table: "leads",
+              sources: ["./mock-data/leads.json"],
+            },
+            {
+              table: "teams",
+              sources: ["./mock-data/teams.json"],
+            },
+          ],
+        },
+      },
     },
   },
 };

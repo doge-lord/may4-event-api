@@ -45,6 +45,7 @@ export class TeamManager {
     const params = {
       ExpressionAttributeNames: {
         "#leadsVisited": "leadsVisited",
+        "#investigationEndDate": "investigationEndDate",
       },
       ExpressionAttributeValues: {
         ":leadsVisited": [
@@ -57,18 +58,59 @@ export class TeamManager {
       },
       UpdateExpression:
         "SET #leadsVisited = list_append(#leadsVisited, :leadsVisited)",
+      ConditionExpression: "attribute_not_exists(#investigationEndDate)",
       Key: { id },
       TableName: "teams",
       ReturnValues: "ALL_NEW",
     };
 
-    const { Attributes } = await dbClient.update(params).promise();
+    try {
+      const { Attributes } = await dbClient.update(params).promise();
+      return this._parseToModel(Attributes);
+    } catch (error) {
+      if (error.code === "ConditionalCheckFailedException") {
+        const team = await this.getTeamById(id);
 
-    return this._parseToModel(Attributes);
+        if (team.leadsVisited.some(({ leadId }) => leadId === lead.id)) {
+          return team;
+        }
+
+        throw new Error("ACTION_NOT_ALLOWED");
+      }
+
+      throw error;
+    }
+  }
+
+  static async endInvestigation(id: string) {
+    const params = {
+      ExpressionAttributeNames: {
+        "#investigationEndDate": "investigationEndDate",
+      },
+      ExpressionAttributeValues: {
+        ":investigationEndDate": Date.now(),
+      },
+      UpdateExpression: "SET #investigationEndDate = :investigationEndDate",
+      ConditionExpression: "attribute_not_exists(#investigationEndDate)",
+      Key: { id },
+      TableName: "teams",
+      ReturnValues: "ALL_NEW",
+    };
+
+    try {
+      const { Attributes } = await dbClient.update(params).promise();
+
+      return this._parseToModel(Attributes);
+    } catch (error) {
+      if (error.code === "ConditionalCheckFailedException") {
+        throw new Error("ACTION_NOT_ALLOWED");
+      }
+      throw error;
+    }
   }
 
   private static _parseToModel(item: any): Team {
-    const { id, leadsVisited } = item;
+    const { id, leadsVisited, investigationEndDate, solutionEndDate } = item;
 
     const distinctLeadsCount = Array.from(
       leadsVisited.reduce((acc, val) => acc.add(val.leadId), new Set())
@@ -78,6 +120,8 @@ export class TeamManager {
       id,
       leadsVisited,
       distinctLeadsCount,
+      investigationEndDate,
+      solutionEndDate,
     };
   }
 }

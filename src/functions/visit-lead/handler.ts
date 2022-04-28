@@ -4,11 +4,7 @@ import { middyfy } from "@libs/lambda";
 import { LeadManager } from "@libs/managers/lead-manager";
 import { TeamManager } from "@libs/managers/team-manager";
 
-import schema from "./schema";
-
-const leads: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
-  event
-) => {
+const leads: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
   const teamId = event.requestContext.authorizer.principalId;
   const { id: leadId } = event.pathParameters;
 
@@ -18,8 +14,8 @@ const leads: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
 
     return formatJSONResponse({ lead, team });
   } catch (error) {
-    if (error.message === "ITEM_NOT_FOUND") {
-      return formatErrorResponse(404, "LEAD_NOT_FOUND");
+    if (error.message === "ACTION_NOT_ALLOWED") {
+      return formatErrorResponse(405, "ACTION_NOT_ALLOWED");
     }
 
     return formatErrorResponse(500);
