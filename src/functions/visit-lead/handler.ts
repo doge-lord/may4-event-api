@@ -4,7 +4,7 @@ import { middyfy } from "@libs/lambda";
 import { LeadManager } from "@libs/managers/lead-manager";
 import { TeamManager } from "@libs/managers/team-manager";
 
-const leads: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
+const visitLead: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
   const teamId = event.requestContext.authorizer.principalId;
   const { id: leadId } = event.pathParameters;
 
@@ -22,4 +22,4 @@ const leads: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
   }
 };
 
-export const main = middyfy(leads);
+export const main = middyfy(visitLead);

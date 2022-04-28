@@ -3,7 +3,9 @@ import { formatJSONResponse, formatErrorResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { TeamManager } from "@libs/managers/team-manager";
 
-const leads: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
+const endInvestigation: ValidatedEventAPIGatewayProxyEvent<{}> = async (
+  event
+) => {
   const teamId = event.requestContext.authorizer.principalId;
 
   try {
@@ -15,4 +17,4 @@ const leads: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
   }
 };
 
-export const main = middyfy(leads);
+export const main = middyfy(endInvestigation);
