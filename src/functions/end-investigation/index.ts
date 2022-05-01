@@ -1,4 +1,5 @@
 import { handlerPath } from "@libs/handler-resolver";
+import { cors } from "@libs/cors";
 
 export default {
   handler: `${handlerPath(__dirname)}/handler.main`,
@@ -12,7 +13,7 @@ export default {
           resultTtlInSeconds: 300,
           type: "request",
         },
-        cors: true,
+        cors,
       },
     },
   ],

@@ -32,7 +32,9 @@ const authorize: Handler = async (event, _, callback) => {
   const { methodArn, headers } = event;
   const { token } = cookie.parse(headers.Cookie);
 
-  if (!token || !methodArn) return callback(null, "Unauthorized");
+  if (!token || !methodArn) {
+    return callback(null, "Unauthorized");
+  }
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
 

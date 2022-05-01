@@ -14,6 +14,7 @@ const visitLead: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
 
     return formatJSONResponse({ lead, team });
   } catch (error) {
+    console.error(error);
     if (error.message === "ACTION_NOT_ALLOWED") {
       return formatErrorResponse(405, "ACTION_NOT_ALLOWED");
     }

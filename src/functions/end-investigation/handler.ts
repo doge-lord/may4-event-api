@@ -13,6 +13,7 @@ const endInvestigation: ValidatedEventAPIGatewayProxyEvent<{}> = async (
 
     return formatJSONResponse(team as any);
   } catch (error) {
+    console.error(error);
     return formatErrorResponse(500);
   }
 };

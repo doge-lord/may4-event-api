@@ -13,6 +13,7 @@ const teamsLeadCount: ValidatedEventAPIGatewayProxyEvent<
 
     return formatJSONResponse({ teams });
   } catch (error) {
+    console.error(error);
     return formatErrorResponse(500);
   }
 };

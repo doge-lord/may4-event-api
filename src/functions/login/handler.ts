@@ -17,7 +17,8 @@ export const generateCookie = (id: string, expireTimeInDays: number) => {
   return cookie.serialize("token", token, {
     maxAge: expireTimeInDays * DAYS,
     httpOnly: true,
-    // sameSite: true,
+    sameSite: process.env.IS_OFFLINE ? "strict" : "none",
+    secure: process.env.IS_OFFLINE ? false : true,
   });
 };
 
@@ -34,6 +35,7 @@ const login: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
         "Set-Cookie": generateCookie(team.id, 1),
       });
     } catch (error) {
+      console.error(error);
       return formatErrorResponse(401, "INVALID_CREDENTIALS");
     }
   }

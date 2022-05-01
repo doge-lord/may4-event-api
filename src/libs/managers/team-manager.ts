@@ -16,7 +16,7 @@ export class TeamManager {
       .promise();
 
     if (!result) {
-      throw new Error("ITEM_NOT_FOUND");
+      throw new Error("ID_NOT_FOUND");
     }
 
     const match = await bcrypt.compare(password, result.password);
@@ -108,6 +108,7 @@ export class TeamManager {
       const { Attributes } = await dbClient.update(params).promise();
       return this._parseToModel(Attributes);
     } catch (error) {
+      console.error(error);
       if (error.code === "ConditionalCheckFailedException") {
         const team = await this.getTeamById(id);
 
@@ -142,6 +143,7 @@ export class TeamManager {
 
       return this._parseToModel(Attributes);
     } catch (error) {
+      console.error(error);
       if (error.code === "ConditionalCheckFailedException") {
         throw new Error("ACTION_NOT_ALLOWED");
       }

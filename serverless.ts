@@ -13,9 +13,9 @@ const serverlessConfiguration: AWS = {
   frameworkVersion: "3",
   plugins: [
     "serverless-esbuild",
-    "serverless-offline",
     "serverless-dynamodb-local",
     "serverless-s3-local",
+    "serverless-offline",
   ],
   useDotenv: true,
   provider: {
@@ -32,13 +32,23 @@ const serverlessConfiguration: AWS = {
         "${self:service}-${sls:stage, self:provider.stage}-seed-data",
       LEADS_TABLE: "leads-table-${sls:stage, self:provider.stage}",
       TEAMS_TABLE: "teams-table-${sls:stage, self:provider.stage}",
+      JWT_SECRET: "${ssm:${self:service}.JWT_SECRET}",
+      JWT_EXPIRY_DAYS: "${ssm:${self:service}.JWT_EXPIRY_DAYS}",
     },
     iam: {
       role: {
         statements: [
           {
             Effect: "Allow",
-            Action: ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem"],
+            Action: [
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+            ],
             Resource: [{ "Fn::GetAtt": ["LeadsTable", "Arn"] }],
           },
           {
@@ -50,13 +60,16 @@ const serverlessConfiguration: AWS = {
               "dynamodb:PutItem",
               "dynamodb:UpdateItem",
               "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
             ],
             Resource: [{ "Fn::GetAtt": ["TeamsTable", "Arn"] }],
           },
           {
             Effect: "Allow",
             Action: ["s3:GetObject"],
-            Resource: [{ "Fn::GetAtt": ["SeedDataBucket", "Arn"] }],
+            Resource: [
+              "arn:aws:s3:::${self:provider.environment.S3_SEED_DATA_BUCKET}/*",
+            ],
           },
         ],
       },
@@ -77,8 +90,15 @@ const serverlessConfiguration: AWS = {
         Type: "AWS::ApiGateway::GatewayResponse",
         Properties: {
           ResponseParameters: {
-            "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
-            "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+            "gatewayresponse.header.Access-Control-Allow-Origin":
+              "'http://localhost:8080'",
+            "gatewayresponse.header.Access-Control-Allow-Methods":
+              "'GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD'",
+            "gatewayresponse.header.Access-Control-Allow-Headers":
+              "'X-Requested-With, X-HTTP-Method-Override, Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Cookie, Set-Cookie, Last-Modified, Pragma, Accept, WWW-Authenticate, Server-Authorization'",
+            "gatewayresponse.header.Access-Control-Allow-Expose-Headers":
+              "'X-Requested-With, X-HTTP-Method-Override, Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Cookie, Set-Cookie, Last-Modified, Pragma, Accept, WWW-Authenticate, Server-Authorization'",
+            "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
           },
           ResponseType: "DEFAULT_4XX",
           RestApiId: { Ref: "ApiGatewayRestApi" },

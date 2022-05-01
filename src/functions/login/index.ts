@@ -1,4 +1,5 @@
 import { handlerPath } from "@libs/handler-resolver";
+import { cors } from "@libs/cors";
 
 import schema from "./schema";
 
@@ -14,7 +15,7 @@ export default {
             "application/json": schema,
           },
         },
-        cors: true,
+        cors,
       },
     },
   ],

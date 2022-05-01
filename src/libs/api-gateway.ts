@@ -19,14 +19,7 @@ export const formatJSONResponse = (
 ) => {
   return {
     statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Credentials": true,
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,UPDATE,OPTIONS",
-      "Access-Control-Allow-Headers":
-        "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept",
-      ...headers,
-    },
+    headers: { ...headers },
     body: JSON.stringify(response),
   };
 };

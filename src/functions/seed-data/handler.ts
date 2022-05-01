@@ -1,6 +1,7 @@
 import { s3 } from "@libs/s3";
 import { dbClient } from "@libs/db-client";
 import { Handler } from "aws-lambda";
+import * as bcrypt from "bcryptjs";
 
 const batchByCount = (list: Array<any>, count: number) => {
   let latestList: Array<any>;
@@ -44,7 +45,12 @@ const seedData: Handler = async () => {
     .promise();
 
   const leadsData: Array<any> = JSON.parse(leadsObject.Body.toString());
-  const teamsData: Array<any> = JSON.parse(teamsObject.Body.toString());
+  const teamsData: Array<any> = await Promise.all(
+    JSON.parse(teamsObject.Body.toString()).map(async (data) => ({
+      ...data,
+      password: await bcrypt.hash(data.password, 10),
+    }))
+  );
 
   batchByCount(leadsData, 25).forEach((list) => {
     batchWrite(list, process.env.LEADS_TABLE);
