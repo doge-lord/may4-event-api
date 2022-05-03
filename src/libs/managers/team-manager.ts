@@ -202,7 +202,8 @@ export class TeamManager {
   }
 
   private static _parseToModel(item: any): Team {
-    const { id, leadsVisited, investigationEndDate, solutionEndDate } = item;
+    const { id, leadsVisited, investigationEndDate, solutionEndDate, members } =
+      item;
 
     const distinctLeadsCount = Array.from(
       leadsVisited.reduce((acc, val) => acc.add(val.leadId), new Set())
@@ -214,6 +215,7 @@ export class TeamManager {
       distinctLeadsCount,
       investigationEndDate,
       solutionEndDate,
+      members,
     };
   }
 }

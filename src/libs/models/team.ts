@@ -8,4 +8,6 @@ export interface Team {
   investigationEndDate?: number;
 
   solutionEndDate?: number;
+
+  members: Array<string>;
 }
