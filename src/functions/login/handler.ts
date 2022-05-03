@@ -1,8 +1,9 @@
+import * as jwt from "jsonwebtoken";
+import * as cookie from "cookie";
+
 import type { ValidatedEventAPIGatewayProxyEvent } from "@libs/api-gateway";
 import { formatJSONResponse, formatErrorResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
-import * as jwt from "jsonwebtoken";
-import * as cookie from "cookie";
 
 import schema from "./schema";
 import { TeamManager } from "@libs/managers/team-manager";

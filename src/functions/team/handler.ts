@@ -3,15 +3,15 @@ import { formatJSONResponse, formatErrorResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { TeamManager } from "@libs/managers/team-manager";
 
-const teamsLeadCount: ValidatedEventAPIGatewayProxyEvent<{}> = async () => {
+const team: ValidatedEventAPIGatewayProxyEvent<{}> = async (event) => {
+  const teamId = event.requestContext.authorizer.principalId;
   try {
-    const teams = await TeamManager.getTeamScores();
-
-    return formatJSONResponse({ teams });
+    const team = await TeamManager.getTeamById(teamId);
+    return formatJSONResponse(team as any);
   } catch (error) {
     console.error(error);
     return formatErrorResponse(500);
   }
 };
 
-export const main = middyfy(teamsLeadCount);
+export const main = middyfy(team);

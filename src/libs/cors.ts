@@ -1,5 +1,5 @@
 export const cors = {
-  origin: "http://localhost:8080",
+  origin: "https://slab-bg.club",
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"] as (
     | "GET"
     | "POST"

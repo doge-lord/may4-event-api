@@ -1,12 +1,15 @@
 import type { AWS } from "@serverless/typescript";
 
 import seedData from "@functions/seed-data";
+import endAllInvestigations from "@functions/end-all-investigations";
 import authorize from "@functions/authorize";
 import login from "@functions/login";
 import logout from "@functions/logout";
+import team from "@functions/team";
 import visitLead from "@functions/visit-lead";
 import endInvestigation from "@functions/end-investigation";
 import teamsLeadCount from "@functions/teams-lead-count";
+import introduction from "@functions/introduction";
 
 const serverlessConfiguration: AWS = {
   service: "may4-event-api",
@@ -82,7 +85,10 @@ const serverlessConfiguration: AWS = {
     logout,
     visitLead,
     endInvestigation,
+    endAllInvestigations,
     teamsLeadCount,
+    team,
+    introduction,
   },
   resources: {
     Resources: {
@@ -91,7 +97,7 @@ const serverlessConfiguration: AWS = {
         Properties: {
           ResponseParameters: {
             "gatewayresponse.header.Access-Control-Allow-Origin":
-              "'http://localhost:8080'",
+              "'https://slab-bg.club'",
             "gatewayresponse.header.Access-Control-Allow-Methods":
               "'GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD'",
             "gatewayresponse.header.Access-Control-Allow-Headers":

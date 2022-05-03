@@ -57,7 +57,8 @@ export class TeamManager {
           const diffCount = a.distinctLeadsCount - b.distinctLeadsCount;
 
           if (diffCount === 0) {
-            const diffDate = a.distinctLeadsCount - b.distinctLeadsCount;
+            const diffDate = a.investigationEndDate - b.investigationEndDate;
+
             if (diffDate != 0) {
               return diffDate;
             }
@@ -147,6 +148,55 @@ export class TeamManager {
       if (error.code === "ConditionalCheckFailedException") {
         throw new Error("ACTION_NOT_ALLOWED");
       }
+      throw error;
+    }
+  }
+
+  static async endAllInvestigations() {
+    // Scan all teams that has no investigationEndDate yet
+    const { Items } = await dbClient
+      .scan({
+        TableName: this.tableName,
+        ExpressionAttributeNames: {
+          "#investigationEndDate": "investigationEndDate",
+        },
+        FilterExpression: "attribute_not_exists(#investigationEndDate)",
+      })
+      .promise();
+
+    const teams = Items.map((item) => this._parseToModel(item));
+    const endDate = Date.now();
+
+    console.info(
+      `Ending investigation for team ids = ${teams
+        .map(({ id }) => id)
+        .join(",")} at ${endDate}`
+    );
+
+    // Batch Write
+    const params = {
+      TransactItems: teams.map(({ id }) => ({
+        Update: {
+          Key: { id },
+          TableName: this.tableName,
+          UpdateExpression: "SET #investigationEndDate = :investigationEndDate",
+          ConditionExpression: "attribute_not_exists(#investigationEndDate)",
+          ExpressionAttributeNames: {
+            "#investigationEndDate": "investigationEndDate",
+          },
+          ExpressionAttributeValues: {
+            ":investigationEndDate": endDate,
+          },
+        },
+      })),
+    };
+
+    try {
+      const output = await dbClient.transactWrite(params).promise();
+
+      return output.$response;
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   }

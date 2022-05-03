@@ -1,7 +1,8 @@
-import { s3 } from "@libs/s3";
-import { dbClient } from "@libs/db-client";
 import { Handler } from "aws-lambda";
 import * as bcrypt from "bcryptjs";
+
+import { s3 } from "@libs/s3";
+import { dbClient } from "@libs/db-client";
 
 const batchByCount = (list: Array<any>, count: number) => {
   let latestList: Array<any>;

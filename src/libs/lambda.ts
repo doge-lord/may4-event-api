@@ -12,7 +12,7 @@ export const middyfy = (handler) => {
     .use(
       cors({
         credentials: true,
-        origin: "http://localhost:8080",
+        origin: "https://slab-bg.club",
         methods: "GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD",
         requestMethods: "GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD",
         headers:
