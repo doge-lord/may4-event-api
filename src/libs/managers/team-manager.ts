@@ -3,6 +3,9 @@ import * as bcrypt from "bcryptjs";
 
 import { Team } from "@libs/models/team";
 import { Lead } from "@libs/models/lead";
+import { DynamoDBRecord } from "aws-lambda";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { AttributeValue } from "aws-sdk/clients/dynamodb";
 
 export class TeamManager {
   static tableName = process.env.TEAMS_TABLE;
@@ -199,6 +202,20 @@ export class TeamManager {
       console.error(error);
       throw error;
     }
+  }
+
+  static parseRecord(record: DynamoDBRecord): Team {
+    if (!record.dynamodb?.NewImage) {
+      return null;
+    }
+
+    const result = unmarshall(
+      record.dynamodb?.NewImage as {
+        [key: string]: AttributeValue;
+      }
+    );
+
+    return this._parseToModel(result);
   }
 
   private static _parseToModel(item: any): Team {

@@ -11,6 +11,11 @@ import endInvestigation from "@functions/end-investigation";
 import teamsLeadCount from "@functions/teams-lead-count";
 import introduction from "@functions/introduction";
 
+import connectHandler from "@functions/websockets/connect";
+import disconnectHandler from "@functions/websockets/disconnect";
+import defaultHandler from "@functions/websockets/default";
+import broadcastHandler from "@functions/websockets/broadcast";
+
 const serverlessConfiguration: AWS = {
   service: "may4-event-api",
   frameworkVersion: "3",
@@ -24,6 +29,9 @@ const serverlessConfiguration: AWS = {
   provider: {
     name: "aws",
     runtime: "nodejs14.x",
+    logs: {
+      websocket: true,
+    },
     apiGateway: {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
@@ -35,6 +43,8 @@ const serverlessConfiguration: AWS = {
         "${self:service}-${sls:stage, self:provider.stage}-seed-data",
       LEADS_TABLE: "leads-table-${sls:stage, self:provider.stage}",
       TEAMS_TABLE: "teams-table-${sls:stage, self:provider.stage}",
+      TEAM_CONNECTION_TABLE:
+        "team-connection-table-${sls:stage, self:provider.stage}",
       JWT_SECRET: "${ssm:${self:service}.JWT_SECRET}",
       JWT_EXPIRY_DAYS: "${ssm:${self:service}.JWT_EXPIRY_DAYS}",
     },
@@ -69,10 +79,44 @@ const serverlessConfiguration: AWS = {
           },
           {
             Effect: "Allow",
+            Action: [
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            Resource: [{ "Fn::GetAtt": ["TeamConnectionTable", "Arn"] }],
+          },
+          {
+            Effect: "Allow",
+            Action: ["dynamodb:Query"],
+            Resource: [
+              {
+                "Fn::Join": [
+                  "/",
+                  [
+                    { "Fn::GetAtt": ["TeamConnectionTable", "Arn"] },
+                    "index",
+                    "ConnectionIdIndex",
+                  ],
+                ],
+              },
+            ],
+          },
+          {
+            Effect: "Allow",
             Action: ["s3:GetObject"],
             Resource: [
               "arn:aws:s3:::${self:provider.environment.S3_SEED_DATA_BUCKET}/*",
             ],
+          },
+          {
+            Effect: "Allow",
+            Action: ["execute-api:ManageConnections"],
+            Resource: ["arn:aws:execute-api:*:*:**/@connections/*"],
           },
         ],
       },
@@ -89,6 +133,10 @@ const serverlessConfiguration: AWS = {
     teamsLeadCount,
     team,
     introduction,
+    connectHandler,
+    disconnectHandler,
+    defaultHandler,
+    broadcastHandler,
   },
   resources: {
     Resources: {
@@ -154,6 +202,55 @@ const serverlessConfiguration: AWS = {
             {
               AttributeName: "id",
               KeyType: "HASH",
+            },
+          ],
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1,
+          },
+          StreamSpecification: {
+            StreamViewType: "NEW_IMAGE",
+          },
+        },
+      },
+      TeamConnectionTable: {
+        Type: "AWS::DynamoDB::Table",
+        Properties: {
+          TableName: "${self:provider.environment.TEAM_CONNECTION_TABLE}",
+          AttributeDefinitions: [
+            {
+              AttributeName: "teamId",
+              AttributeType: "S",
+            },
+            {
+              AttributeName: "connectionId",
+              AttributeType: "S",
+            },
+          ],
+          KeySchema: [
+            {
+              AttributeName: "teamId",
+              KeyType: "HASH",
+            },
+            {
+              AttributeName: "connectionId",
+              KeyType: "RANGE",
+            },
+          ],
+          GlobalSecondaryIndexes: [
+            {
+              IndexName: "ConnectionIdIndex",
+              KeySchema: [
+                {
+                  AttributeName: "connectionId",
+                  KeyType: "HASH",
+                },
+              ],
+              Projection: { ProjectionType: "ALL" },
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1,
+              },
             },
           ],
           ProvisionedThroughput: {
