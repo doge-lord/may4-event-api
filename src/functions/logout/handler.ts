@@ -8,6 +8,8 @@ export const generateCookie = () => {
   return cookie.serialize("token", "", {
     maxAge: 0,
     httpOnly: true,
+    sameSite: process.env.IS_OFFLINE ? "strict" : "none",
+    secure: process.env.IS_OFFLINE ? false : true,
   });
 };
 
